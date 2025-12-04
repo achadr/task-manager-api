@@ -18,3 +18,7 @@ coverage/
 
 # TypeScript cache
 *.tsbuildinfo
+
+# Database
+*.sqlite
+data/
