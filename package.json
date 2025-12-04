@@ -1,0 +1,12 @@
+{
+  "name": "task-manager-api",
+  "version": "1.0.0",
+  "description": "Task management REST API built with Node.js, TypeScript, and clean architecture",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["nodejs", "typescript", "rest-api", "clean-architecture"],
+  "author": "Achraf",
+  "license": "MIT"
+}
