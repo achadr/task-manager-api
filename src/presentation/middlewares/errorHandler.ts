@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { TaskNotFoundError } from "../../domain/errors/TaskNotFoundError";
+import logger from "../../infrastructure/logging/Logger";
 
 export function errorHandler(
   error: Error,
@@ -7,7 +8,12 @@ export function errorHandler(
   res: Response,
   next: NextFunction
 ): void {
-  console.error(`[ERROR] ${error.message}`);
+  logger.error("Request failed", {
+    error: error.message,
+    stack: error.stack,
+    method: req.method,
+    path: req.path,
+  });
 
   if (error instanceof TaskNotFoundError) {
     res.status(404).json({
