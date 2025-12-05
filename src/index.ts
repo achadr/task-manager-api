@@ -4,12 +4,19 @@ import { TaskService } from "./application/services/TaskService";
 import { TaskController } from "./presentation/controllers/TaskController";
 import { createTaskRoutes } from "./presentation/routes/taskRoutes";
 import { errorHandler } from "./presentation/middlewares/errorHandler";
+import logger from "./infrastructure/logging/Logger";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware to parse JSON
 app.use(express.json());
+
+// Request logging
+app.use((req, res, next) => {
+  logger.info(`${req.method} ${req.path}`);
+  next();
+});
 
 // Dependency Injection - wiring everything together
 const taskRepository = new SQLiteTaskRepository();
@@ -24,5 +31,5 @@ app.use(errorHandler);
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  logger.info(`Server running on http://localhost:${PORT}`);
 });
