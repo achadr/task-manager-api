@@ -6,4 +6,6 @@ export interface TaskRepository {
   findAll(): Promise<Task[]>;
   update(task: Task): Promise<Task>;
   delete(id: string): Promise<void>;
+  countByStatus(): Promise<Record<string, number>>;
+  countByPriority(): Promise<Record<string, number>>;
 }
