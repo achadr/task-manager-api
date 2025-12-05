@@ -5,6 +5,15 @@ import { CreateTaskDTO, UpdateTaskDTO } from "../../application/dtos/TaskDTO";
 export class TaskController {
   constructor(private taskService: TaskService) {}
 
+  async getStats(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const stats = await this.taskService.getStats();
+      res.status(200).json(stats);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const dto: CreateTaskDTO = req.body;

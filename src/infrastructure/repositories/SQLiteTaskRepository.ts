@@ -64,6 +64,48 @@ export class SQLiteTaskRepository implements TaskRepository {
     stmt.run(id);
   }
 
+  async countByStatus(): Promise<Record<string, number>> {
+    const stmt = db.prepare(`
+      SELECT status, COUNT(*) as count
+      FROM tasks
+      GROUP BY status
+    `);
+    const rows = stmt.all() as { status: string; count: number }[];
+
+    const result: Record<string, number> = {
+      pending: 0,
+      in_progress: 0,
+      completed: 0,
+    };
+
+    rows.forEach((row) => {
+      result[row.status] = row.count;
+    });
+
+    return result;
+  }
+
+  async countByPriority(): Promise<Record<string, number>> {
+    const stmt = db.prepare(`
+      SELECT priority, COUNT(*) as count
+      FROM tasks
+      GROUP BY priority
+    `);
+    const rows = stmt.all() as { priority: string; count: number }[];
+
+    const result: Record<string, number> = {
+      low: 0,
+      medium: 0,
+      high: 0,
+    };
+
+    rows.forEach((row) => {
+      result[row.priority] = row.count;
+    });
+
+    return result;
+  }
+
   private mapRowToTask(row: Record<string, unknown>): Task {
     const props: TaskProps = {
       id: row.id as string,

@@ -3,6 +3,7 @@ import { TaskRepository } from "../../domain/interfaces/TaskRepository";
 import { TaskNotFoundError } from "../../domain/errors/TaskNotFoundError";
 import { CreateTaskDTO, UpdateTaskDTO, TaskResponseDTO } from "../dtos/TaskDTO";
 import { randomUUID } from "crypto";
+import { TaskStatsDTO } from "../dtos/StatsDTO";
 
 export class TaskService {
   constructor(private taskRepository: TaskRepository) {}
@@ -71,7 +72,28 @@ export class TaskService {
 
     await this.taskRepository.delete(id);
   }
+  async getStats(): Promise<TaskStatsDTO> {
+    const tasks = await this.taskRepository.findAll();
+    const byStatus = await this.taskRepository.countByStatus();
+    const byPriority = await this.taskRepository.countByPriority();
 
+    const overdue = tasks.filter((task) => task.isOverdue()).length;
+
+    return {
+      total: tasks.length,
+      byStatus: {
+        pending: byStatus.pending,
+        in_progress: byStatus.in_progress,
+        completed: byStatus.completed,
+      },
+      byPriority: {
+        low: byPriority.low,
+        medium: byPriority.medium,
+        high: byPriority.high,
+      },
+      overdue,
+    };
+  }
   private toResponseDTO(task: Task): TaskResponseDTO {
     return {
       id: task.id,
