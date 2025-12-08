@@ -65,19 +65,20 @@
   line-height: 1;
 }
 
-.task-list {
+.kanban-board {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
+  margin-top: 2rem;
 }
 
 .empty-state {
-  grid-column: 1 / -1;
   text-align: center;
   padding: 4rem 2rem;
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 2rem;
 }
 
 .empty-state p {
@@ -100,7 +101,7 @@
     text-align: center;
   }
 
-  .task-list {
+  .kanban-board {
     grid-template-columns: 1fr;
   }
 }
