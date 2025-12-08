@@ -1,73 +1,149 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-
-interface Task {
-  id: string
-  title: string
-  description: string
-  status: 'pending' | 'in_progress' | 'completed'
-  priority: 'low' | 'medium' | 'high'
-  createdAt: string
-  updatedAt: string
-}
+import { Task, CreateTaskDto, TaskStats as TaskStatsType } from './types/task'
+import { taskApi } from './services/api'
+import TaskCard from './components/TaskCard'
+import TaskForm from './components/TaskForm'
+import TaskStats from './components/TaskStats'
 
 function App() {
   const [tasks, setTasks] = useState<Task[]>([])
+  const [stats, setStats] = useState<TaskStatsType | null>(null)
   const [loading, setLoading] = useState(true)
+  const [statsLoading, setStatsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showForm, setShowForm] = useState(false)
+  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
 
   useEffect(() => {
-    fetchTasks()
+    loadData()
   }, [])
+
+  const loadData = async () => {
+    await Promise.all([fetchTasks(), fetchStats()])
+  }
 
   const fetchTasks = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/tasks')
-      if (!response.ok) {
-        throw new Error('Failed to fetch tasks')
-      }
-      const data = await response.json()
+      const data = await taskApi.getAllTasks()
       setTasks(data)
       setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      setError(err instanceof Error ? err.message : 'Failed to fetch tasks')
     } finally {
       setLoading(false)
     }
+  }
+
+  const fetchStats = async () => {
+    try {
+      setStatsLoading(true)
+      const data = await taskApi.getTaskStats()
+      setStats(data)
+    } catch (err) {
+      console.error('Failed to fetch stats:', err)
+    } finally {
+      setStatsLoading(false)
+    }
+  }
+
+  const handleCreateTask = async (taskData: CreateTaskDto) => {
+    try {
+      await taskApi.createTask(taskData)
+      setShowForm(false)
+      await loadData()
+    } catch (err) {
+      throw err
+    }
+  }
+
+  const handleUpdateTask = async (taskData: CreateTaskDto) => {
+    if (!editingTask) return
+
+    try {
+      await taskApi.updateTask(editingTask.id, taskData)
+      setShowForm(false)
+      setEditingTask(undefined)
+      await loadData()
+    } catch (err) {
+      throw err
+    }
+  }
+
+  const handleDeleteTask = async (id: string) => {
+    try {
+      await taskApi.deleteTask(id)
+      await loadData()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete task')
+    }
+  }
+
+  const handleEditClick = (task: Task) => {
+    setEditingTask(task)
+    setShowForm(true)
+  }
+
+  const handleCancelForm = () => {
+    setShowForm(false)
+    setEditingTask(undefined)
+  }
+
+  const handleNewTask = () => {
+    setEditingTask(undefined)
+    setShowForm(true)
   }
 
   if (loading) {
     return <div className="container">Loading tasks...</div>
   }
 
-  if (error) {
-    return <div className="container error">Error: {error}</div>
-  }
-
   return (
     <div className="container">
-      <h1>Task Manager</h1>
+      <header className="app-header">
+        <h1>Task Manager</h1>
+        <button className="btn btn-primary" onClick={handleNewTask}>
+          + New Task
+        </button>
+      </header>
+
+      {error && (
+        <div className="error-banner">
+          {error}
+          <button onClick={() => setError(null)}>×</button>
+        </div>
+      )}
+
+      <TaskStats stats={stats} loading={statsLoading} />
+
       <div className="task-list">
         {tasks.length === 0 ? (
-          <p>No tasks found. Create your first task!</p>
+          <div className="empty-state">
+            <p>No tasks found. Create your first task!</p>
+            <button className="btn btn-primary" onClick={handleNewTask}>
+              Create Task
+            </button>
+          </div>
         ) : (
           tasks.map((task) => (
-            <div key={task.id} className={`task-card ${task.status}`}>
-              <h3>{task.title}</h3>
-              <p>{task.description}</p>
-              <div className="task-meta">
-                <span className={`badge priority-${task.priority}`}>
-                  {task.priority}
-                </span>
-                <span className={`badge status-${task.status}`}>
-                  {task.status.replace('_', ' ')}
-                </span>
-              </div>
-            </div>
+            <TaskCard
+              key={task.id}
+              task={task}
+              onEdit={handleEditClick}
+              onDelete={handleDeleteTask}
+            />
           ))
         )}
       </div>
+
+      {showForm && (
+        <TaskForm
+          task={editingTask}
+          onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
+          onCancel={handleCancelForm}
+        />
+      )}
     </div>
   )
 }
