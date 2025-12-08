@@ -1,24 +1,30 @@
 # Dependencies
 node_modules/
+backend/node_modules/
+frontend/node_modules/
 
 # Build output
 dist/
+backend/dist/
+frontend/dist/
+frontend/build/
 
 # Environment variables
 .env
+backend/.env
+frontend/.env
 
 # Logs
 *.log
 
 # Testing
 coverage/
+backend/coverage/
+frontend/coverage/
 
 # Database
 *.sqlite
+backend/data/
 
 # TypeScript cache
 *.tsbuildinfo
-
-# Database
-*.sqlite
-data/
