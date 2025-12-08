@@ -27,7 +27,11 @@ frontend/coverage/
 backend/data/
 
 # TypeScript cache
+<<<<<<< HEAD
 *.tsbuildinfo
 
 # Vite
 .vite
+=======
+*.tsbuildinfo
+>>>>>>> main
