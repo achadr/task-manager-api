@@ -155,8 +155,8 @@ The frontend uses a component-based architecture:
 
 The application uses a consistent color scheme across all components:
 - **Pending Status** - Orange/Yellow (#ffa726)
-- **In Progress Status** - Green (#66bb6a)
-- **Completed Status** - Blue (#42a5f5)
+- **In Progress Status** - Blue (#42a5f5)
+- **Completed Status** - Green (#66bb6a)
 - **Low Priority** - Blue (#1976d2)
 - **Medium Priority** - Purple (#8e24aa)
 - **High Priority** - Red (#c62828)

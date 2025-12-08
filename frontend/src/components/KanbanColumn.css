@@ -21,11 +21,11 @@
 }
 
 .kanban-column-in_progress .kanban-column-header {
-  border-bottom-color: #66bb6a;
+  border-bottom-color: #42a5f5;
 }
 
 .kanban-column-completed .kanban-column-header {
-  border-bottom-color: #42a5f5;
+  border-bottom-color: #66bb6a;
 }
 
 .kanban-column-title {

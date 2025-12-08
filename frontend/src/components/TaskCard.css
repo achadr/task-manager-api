@@ -36,12 +36,12 @@
 }
 
 .task-card.in_progress::before {
-  background: linear-gradient(135deg, #66bb6a, #43a047);
+  background: linear-gradient(135deg, #42a5f5, #1e88e5);
   opacity: 0.08;
 }
 
 .task-card.completed::before {
-  background: linear-gradient(135deg, #42a5f5, #1e88e5);
+  background: linear-gradient(135deg, #66bb6a, #43a047);
   opacity: 0.06;
 }
 
@@ -55,11 +55,11 @@
 }
 
 .task-card.in_progress {
-  border-left: 4px solid #66bb6a;
+  border-left: 4px solid #42a5f5;
 }
 
 .task-card.completed {
-  border-left: 4px solid #42a5f5;
+  border-left: 4px solid #66bb6a;
 }
 
 .task-card-header {
@@ -142,13 +142,13 @@
 }
 
 .status-in_progress {
-  background: #e8f5e9;
-  color: #388e3c;
+  background: #e3f2fd;
+  color: #1976d2;
 }
 
 .status-completed {
-  background: #e3f2fd;
-  color: #1976d2;
+  background: #e8f5e9;
+  color: #388e3c;
 }
 
 .task-dates {

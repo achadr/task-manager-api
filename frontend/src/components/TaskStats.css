@@ -147,11 +147,11 @@
 }
 
 .status-in_progress-fill {
-  background: linear-gradient(90deg, #66bb6a, #388e3c);
+  background: linear-gradient(90deg, #42a5f5, #1976d2);
 }
 
 .status-completed-fill {
-  background: linear-gradient(90deg, #42a5f5, #1976d2);
+  background: linear-gradient(90deg, #66bb6a, #388e3c);
 }
 
 .priority-low-fill {
@@ -201,13 +201,13 @@
 }
 
 .status-in_progress {
-  background: #e8f5e9;
-  color: #388e3c;
+  background: #e3f2fd;
+  color: #1976d2;
 }
 
 .status-completed {
-  background: #e3f2fd;
-  color: #1976d2;
+  background: #e8f5e9;
+  color: #388e3c;
 }
 
 @media (max-width: 768px) {
