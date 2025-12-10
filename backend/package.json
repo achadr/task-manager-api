@@ -4,11 +4,13 @@
   "description": "Task management REST API built with Node.js, TypeScript",
   "main": "dist/index.js",
   "scripts": {
-  "build": "tsc",
-  "start": "node dist/index.js",
-  "dev": "tsx watch src/index.ts",
-  "test": "jest",
-  "test:coverage": "jest --coverage"
+    "build": "prisma generate && tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "prisma:generate": "prisma generate",
+    "prisma:studio": "prisma studio"
   },
   "keywords": [
     "nodejs",
@@ -31,8 +33,12 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@libsql/client": "^0.15.15",
+    "@prisma/adapter-libsql": "^7.1.0",
+    "@prisma/client": "^7.1.0",
     "better-sqlite3": "^12.5.0",
     "express": "^5.2.1",
+    "prisma": "^7.1.0",
     "winston": "^3.18.3",
     "zod": "^4.1.13"
   }

@@ -1,76 +1,141 @@
 import { Task, TaskProps, TaskStatus, TaskPriority } from "../../domain/entities/Task";
 import { TaskRepository } from "../../domain/interfaces/TaskRepository";
-import db from "../database/connection";
+import prisma from "../database/connection";
+
+type PrismaTaskStatus = "pending" | "in_progress" | "completed";
+type PrismaTaskPriority = "low" | "medium" | "high";
 
 export class SQLiteTaskRepository implements TaskRepository {
-  async save(task: Task): Promise<Task> {
-    const stmt = db.prepare(`
-      INSERT INTO tasks (id, title, description, status, priority, due_date, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `);
+  private isValidPrismaStatus(status: string): status is PrismaTaskStatus {
+    return status === "pending" || status === "in_progress" || status === "completed";
+  }
 
-    stmt.run(
-      task.id,
-      task.title,
-      task.description,
-      task.status,
-      task.priority,
-      task.dueDate?.toISOString() ?? null,
-      task.createdAt.toISOString(),
-      task.updatedAt.toISOString()
-    );
+  private isValidPrismaPriority(priority: string): priority is PrismaTaskPriority {
+    return priority === "low" || priority === "medium" || priority === "high";
+  }
+
+  private validateAndConvertStatus(status: string): PrismaTaskStatus {
+    if (!this.isValidPrismaStatus(status)) {
+      throw new Error(`Invalid task status: ${status}`);
+    }
+    return status;
+  }
+
+  private validateAndConvertPriority(priority: string): PrismaTaskPriority {
+    if (!this.isValidPrismaPriority(priority)) {
+      throw new Error(`Invalid task priority: ${priority}`);
+    }
+    return priority;
+  }
+
+  private toPrismaStatus(status: TaskStatus): PrismaTaskStatus {
+    const statusMap: Record<TaskStatus, PrismaTaskStatus> = {
+      [TaskStatus.PENDING]: "pending",
+      [TaskStatus.IN_PROGRESS]: "in_progress",
+      [TaskStatus.COMPLETED]: "completed",
+    };
+    return statusMap[status];
+  }
+
+  private toPrismaPriority(priority: TaskPriority): PrismaTaskPriority {
+    const priorityMap: Record<TaskPriority, PrismaTaskPriority> = {
+      [TaskPriority.LOW]: "low",
+      [TaskPriority.MEDIUM]: "medium",
+      [TaskPriority.HIGH]: "high",
+    };
+    return priorityMap[priority];
+  }
+
+  private toDomainStatus(status: PrismaTaskStatus): TaskStatus {
+    const statusMap: Record<PrismaTaskStatus, TaskStatus> = {
+      pending: TaskStatus.PENDING,
+      in_progress: TaskStatus.IN_PROGRESS,
+      completed: TaskStatus.COMPLETED,
+    };
+    return statusMap[status];
+  }
+
+  private toDomainPriority(priority: PrismaTaskPriority): TaskPriority {
+    const priorityMap: Record<PrismaTaskPriority, TaskPriority> = {
+      low: TaskPriority.LOW,
+      medium: TaskPriority.MEDIUM,
+      high: TaskPriority.HIGH,
+    };
+    return priorityMap[priority];
+  }
+
+  async save(task: Task): Promise<Task> {
+    await prisma.task.create({
+      data: {
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        status: this.toPrismaStatus(task.status),
+        priority: this.toPrismaPriority(task.priority),
+        dueDate: task.dueDate,
+        createdAt: task.createdAt,
+        updatedAt: task.updatedAt,
+      },
+    });
 
     return task;
   }
 
   async findById(id: string): Promise<Task | null> {
-    const stmt = db.prepare("SELECT * FROM tasks WHERE id = ?");
-    const row = stmt.get(id) as Record<string, unknown> | undefined;
+    const taskRecord = await prisma.task.findUnique({
+      where: { id },
+    });
 
-    if (!row) return null;
+    if (!taskRecord) return null;
 
-    return this.mapRowToTask(row);
+    return this.mapRecordToTask({
+      ...taskRecord,
+      status: this.validateAndConvertStatus(taskRecord.status),
+      priority: this.validateAndConvertPriority(taskRecord.priority),
+    });
   }
 
   async findAll(): Promise<Task[]> {
-    const stmt = db.prepare("SELECT * FROM tasks");
-    const rows = stmt.all() as Record<string, unknown>[];
+    const taskRecords = await prisma.task.findMany();
 
-    return rows.map((row) => this.mapRowToTask(row));
+    return taskRecords.map((record) =>
+      this.mapRecordToTask({
+        ...record,
+        status: this.validateAndConvertStatus(record.status),
+        priority: this.validateAndConvertPriority(record.priority),
+      })
+    );
   }
 
   async update(task: Task): Promise<Task> {
-    const stmt = db.prepare(`
-      UPDATE tasks
-      SET title = ?, description = ?, status = ?, priority = ?, due_date = ?, updated_at = ?
-      WHERE id = ?
-    `);
-
-    stmt.run(
-      task.title,
-      task.description,
-      task.status,
-      task.priority,
-      task.dueDate?.toISOString() ?? null,
-      task.updatedAt.toISOString(),
-      task.id
-    );
+    await prisma.task.update({
+      where: { id: task.id },
+      data: {
+        title: task.title,
+        description: task.description,
+        status: this.toPrismaStatus(task.status),
+        priority: this.toPrismaPriority(task.priority),
+        dueDate: task.dueDate,
+        updatedAt: task.updatedAt,
+      },
+    });
 
     return task;
   }
 
   async delete(id: string): Promise<void> {
-    const stmt = db.prepare("DELETE FROM tasks WHERE id = ?");
-    stmt.run(id);
+    await prisma.task.delete({
+      where: { id },
+    });
   }
 
   async countByStatus(): Promise<Record<string, number>> {
-    const stmt = db.prepare(`
-      SELECT status, COUNT(*) as count
-      FROM tasks
-      GROUP BY status
-    `);
-    const rows = stmt.all() as { status: string; count: number }[];
+    const statusCounts = await prisma.task.groupBy({
+      by: ["status"],
+      _count: {
+        status: true,
+      },
+    });
 
     const result: Record<string, number> = {
       pending: 0,
@@ -78,20 +143,20 @@ export class SQLiteTaskRepository implements TaskRepository {
       completed: 0,
     };
 
-    rows.forEach((row) => {
-      result[row.status] = row.count;
+    statusCounts.forEach((item) => {
+      result[item.status] = item._count.status;
     });
 
     return result;
   }
 
   async countByPriority(): Promise<Record<string, number>> {
-    const stmt = db.prepare(`
-      SELECT priority, COUNT(*) as count
-      FROM tasks
-      GROUP BY priority
-    `);
-    const rows = stmt.all() as { priority: string; count: number }[];
+    const priorityCounts = await prisma.task.groupBy({
+      by: ["priority"],
+      _count: {
+        priority: true,
+      },
+    });
 
     const result: Record<string, number> = {
       low: 0,
@@ -99,23 +164,32 @@ export class SQLiteTaskRepository implements TaskRepository {
       high: 0,
     };
 
-    rows.forEach((row) => {
-      result[row.priority] = row.count;
+    priorityCounts.forEach((item) => {
+      result[item.priority] = item._count.priority;
     });
 
     return result;
   }
 
-  private mapRowToTask(row: Record<string, unknown>): Task {
+  private mapRecordToTask(record: {
+    id: string;
+    title: string;
+    description: string;
+    status: PrismaTaskStatus;
+    priority: PrismaTaskPriority;
+    dueDate: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }): Task {
     const props: TaskProps = {
-      id: row.id as string,
-      title: row.title as string,
-      description: row.description as string,
-      status: row.status as TaskStatus,
-      priority: row.priority as TaskPriority,
-      dueDate: row.due_date ? new Date(row.due_date as string) : null,
-      createdAt: new Date(row.created_at as string),
-      updatedAt: new Date(row.updated_at as string),
+      id: record.id,
+      title: record.title,
+      description: record.description,
+      status: this.toDomainStatus(record.status),
+      priority: this.toDomainPriority(record.priority),
+      dueDate: record.dueDate,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
     };
 
     return new Task(props);
