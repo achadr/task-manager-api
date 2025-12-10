@@ -4,11 +4,15 @@
   "description": "Task management REST API built with Node.js, TypeScript",
   "main": "dist/index.js",
   "scripts": {
-  "build": "tsc",
-  "start": "node dist/index.js",
-  "dev": "tsx watch src/index.ts",
-  "test": "jest",
-  "test:coverage": "jest --coverage"
+    "build": "prisma generate && tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "prisma:generate": "prisma generate",
+    "prisma:studio": "prisma studio",
+    "db:backup": "tsx scripts/backup-data.ts",
+    "db:restore": "tsx scripts/restore-data.ts"
   },
   "keywords": [
     "nodejs",
@@ -19,7 +23,7 @@
   "author": "Achraf",
   "license": "MIT",
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.13",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.10.1",
@@ -31,8 +35,14 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "better-sqlite3": "^12.5.0",
+    "@libsql/client": "^0.15.15",
+    "@prisma/adapter-libsql": "^7.1.0",
+    "@prisma/client": "^7.1.0",
+    "cors": "^2.8.5",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
+    "prisma": "^7.1.0",
     "winston": "^3.18.3",
     "zod": "^4.1.13"
   }

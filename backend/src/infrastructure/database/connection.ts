@@ -1,22 +1,55 @@
-import Database, { Database as DatabaseType } from "better-sqlite3";
+import { PrismaClient } from "@prisma/client";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 import path from "path";
+import logger from "../logging/Logger";
 
 const dbPath = path.resolve(__dirname, "../../../data/tasks.sqlite");
 
-const db: DatabaseType = new Database(dbPath);
+const adapter = new PrismaLibSql({
+  url: `file:${dbPath}`,
+});
 
-// Create tasks table if it doesn't exist
-db.exec(`
-  CREATE TABLE IF NOT EXISTS tasks (
-    id TEXT PRIMARY KEY,
-    title TEXT NOT NULL,
-    description TEXT NOT NULL,
-    status TEXT NOT NULL,
-    priority TEXT NOT NULL,
-    due_date TEXT,
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
-  )
-`);
+const prisma = new PrismaClient({
+  adapter,
+  log: [
+    { level: "error", emit: "event" },
+    { level: "warn", emit: "event" },
+  ],
+});
 
-export default db;
+// Log Prisma errors
+prisma.$on("error", (e) => {
+  logger.error("Prisma error", { message: e.message, target: e.target });
+});
+
+prisma.$on("warn", (e) => {
+  logger.warn("Prisma warning", { message: e.message, target: e.target });
+});
+
+// Test connection on startup
+export async function connectDatabase(): Promise<void> {
+  try {
+    await prisma.$connect();
+    logger.info("Database connected successfully", { path: dbPath });
+  } catch (error) {
+    logger.error("Failed to connect to database", {
+      error: error instanceof Error ? error.message : String(error),
+      path: dbPath,
+    });
+    throw new Error("Database connection failed");
+  }
+}
+
+// Graceful disconnect
+export async function disconnectDatabase(): Promise<void> {
+  try {
+    await prisma.$disconnect();
+    logger.info("Database disconnected successfully");
+  } catch (error) {
+    logger.error("Error disconnecting from database", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+export default prisma;
