@@ -21,7 +21,6 @@
   "author": "Achraf",
   "license": "MIT",
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.10.1",
@@ -36,7 +35,6 @@
     "@libsql/client": "^0.15.15",
     "@prisma/adapter-libsql": "^7.1.0",
     "@prisma/client": "^7.1.0",
-    "better-sqlite3": "^12.5.0",
     "express": "^5.2.1",
     "prisma": "^7.1.0",
     "winston": "^3.18.3",
