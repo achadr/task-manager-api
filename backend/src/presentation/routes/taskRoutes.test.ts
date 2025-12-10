@@ -54,10 +54,18 @@ describe("Task API", () => {
     });
 
     it("should return 404 for non-existent task", async () => {
-      const response = await request(app).get("/tasks/non-existent-id");
+      // Use a valid UUID that doesn't exist
+      const response = await request(app).get("/tasks/00000000-0000-0000-0000-000000000000");
 
       expect(response.status).toBe(404);
       expect(response.body.error).toBe("TaskNotFoundError");
+    });
+
+    it("should return 400 for invalid UUID format", async () => {
+      const response = await request(app).get("/tasks/invalid-uuid-format");
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe("ValidationError");
     });
   });
 

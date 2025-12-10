@@ -95,8 +95,14 @@ export class SQLiteTaskRepository implements TaskRepository {
     });
   }
 
-  async findAll(): Promise<Task[]> {
-    const taskRecords = await prisma.task.findMany();
+  async findAll(options?: { limit?: number; offset?: number }): Promise<Task[]> {
+    const taskRecords = await prisma.task.findMany({
+      skip: options?.offset,
+      take: options?.limit,
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
     return taskRecords.map((record) =>
       this.mapRecordToTask({
@@ -105,6 +111,24 @@ export class SQLiteTaskRepository implements TaskRepository {
         priority: this.validateAndConvertPriority(record.priority),
       })
     );
+  }
+
+  async count(): Promise<number> {
+    return await prisma.task.count();
+  }
+
+  async countOverdue(): Promise<number> {
+    const now = new Date();
+    return await prisma.task.count({
+      where: {
+        dueDate: {
+          lt: now,
+        },
+        status: {
+          not: "completed",
+        },
+      },
+    });
   }
 
   async update(task: Task): Promise<Task> {

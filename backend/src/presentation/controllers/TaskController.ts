@@ -36,7 +36,10 @@ export class TaskController {
 
   async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const tasks = await this.taskService.getAllTasks();
+      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
+      const offset = req.query.offset ? parseInt(req.query.offset as string, 10) : undefined;
+
+      const tasks = await this.taskService.getAllTasks(limit, offset);
       res.status(200).json(tasks);
     } catch (error) {
       next(error);

@@ -14,8 +14,10 @@ describe("TaskService", () => {
       findAll: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+      count: jest.fn(),
       countByStatus: jest.fn(),
       countByPriority: jest.fn(),
+      countOverdue: jest.fn(),
     };
     taskService = new TaskService(mockRepository);
   });

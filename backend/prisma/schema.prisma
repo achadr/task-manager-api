@@ -31,5 +31,10 @@ model Task {
   createdAt   DateTime     @map("created_at")
   updatedAt   DateTime     @map("updated_at")
 
+  @@index([status])
+  @@index([priority])
+  @@index([dueDate])
+  @@index([createdAt])
+  @@index([status, dueDate])
   @@map("tasks")
 }

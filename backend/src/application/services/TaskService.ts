@@ -37,8 +37,8 @@ export class TaskService {
     return this.toResponseDTO(task);
   }
 
-  async getAllTasks(): Promise<TaskResponseDTO[]> {
-    const tasks = await this.taskRepository.findAll();
+  async getAllTasks(limit?: number, offset?: number): Promise<TaskResponseDTO[]> {
+    const tasks = await this.taskRepository.findAll({ limit, offset });
     return tasks.map((task) => this.toResponseDTO(task));
   }
 
@@ -73,14 +73,15 @@ export class TaskService {
     await this.taskRepository.delete(id);
   }
   async getStats(): Promise<TaskStatsDTO> {
-    const tasks = await this.taskRepository.findAll();
-    const byStatus = await this.taskRepository.countByStatus();
-    const byPriority = await this.taskRepository.countByPriority();
-
-    const overdue = tasks.filter((task) => task.isOverdue()).length;
+    const [total, byStatus, byPriority, overdue] = await Promise.all([
+      this.taskRepository.count(),
+      this.taskRepository.countByStatus(),
+      this.taskRepository.countByPriority(),
+      this.taskRepository.countOverdue(),
+    ]);
 
     return {
-      total: tasks.length,
+      total,
       byStatus: {
         pending: byStatus.pending,
         in_progress: byStatus.in_progress,
