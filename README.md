@@ -161,6 +161,29 @@ The application uses a consistent color scheme across all components:
 - **Medium Priority** - Purple (#8e24aa)
 - **High Priority** - Red (#c62828)
 
+## Running with Docker
+
+Requirements: Docker Engine 25+ with Compose v2.
+
+```bash
+docker compose up -d --build
+```
+
+The app is served on http://localhost:8080. The API is reachable under `/api`
+(nginx strips the prefix before proxying to the backend).
+
+| Service    | Role                                                        |
+|------------|-------------------------------------------------------------|
+| `migrate`  | applies Prisma migrations, then exits                       |
+| `backend`  | Express API on port 3000, internal only, with a healthcheck |
+| `frontend` | nginx serving the React build and proxying `/api`           |
+
+Data lives in the `sqlite-data` named volume and survives `docker compose down`.
+`docker compose down -v` deletes it.
+
+Known limitations: SQLite (no horizontal scaling), `/health` does not check the
+database, several environment variables are validated but not used.
+
 ## License
 
 MIT
