@@ -13,6 +13,9 @@ import logger from "./infrastructure/logging/Logger";
 export function createApp() {
   const app = express();
 
+  // Behind a single reverse proxy: use X-Forwarded-For for the client IP
+  app.set("trust proxy", 1);
+
   // Security middleware
   app.use(helmet());
   app.use(cors({
