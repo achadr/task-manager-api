@@ -165,7 +165,12 @@ The application uses a consistent color scheme across all components:
 
 Requirements: Docker Engine 25+ with Compose v2.
 
+Create a `.env` file at the repository root (it is git-ignored). Compose reads it to
+fill in the database credentials; it stops with an error if a value is missing.
+
 ```bash
+printf 'POSTGRES_USER=taskmanager\nPOSTGRES_DB=taskmanager\nPOSTGRES_PASSWORD=%s\n' "$(openssl rand -hex 24)" > .env
+chmod 600 .env
 docker compose up -d --build
 ```
 
@@ -174,15 +179,16 @@ The app is served on http://localhost:8080. The API is reachable under `/api`
 
 | Service    | Role                                                        |
 |------------|-------------------------------------------------------------|
+| `postgres` | PostgreSQL 18, port 5432 published on 127.0.0.1 only       |
 | `migrate`  | applies Prisma migrations, then exits                       |
 | `backend`  | Express API on port 3000, internal only, with a healthcheck |
 | `frontend` | nginx serving the React build and proxying `/api`           |
 
-Data lives in the `sqlite-data` named volume and survives `docker compose down`.
+Data lives in the `postgres-data` named volume and survives `docker compose down`.
 `docker compose down -v` deletes it.
 
-Known limitations: SQLite (no horizontal scaling), `/health` does not check the
-database, several environment variables are validated but not used.
+Known limitations: `/health` does not check the database, several environment
+variables are validated but not used.
 
 ## License
 
