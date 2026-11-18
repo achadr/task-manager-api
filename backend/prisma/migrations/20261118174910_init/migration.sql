@@ -1,13 +1,21 @@
+-- CreateEnum
+CREATE TYPE "TaskStatus" AS ENUM ('pending', 'in_progress', 'completed');
+
+-- CreateEnum
+CREATE TYPE "TaskPriority" AS ENUM ('low', 'medium', 'high');
+
 -- CreateTable
 CREATE TABLE "tasks" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
-    "status" TEXT NOT NULL,
-    "priority" TEXT NOT NULL,
-    "due_date" DATETIME,
-    "created_at" DATETIME NOT NULL,
-    "updated_at" DATETIME NOT NULL
+    "status" "TaskStatus" NOT NULL,
+    "priority" "TaskPriority" NOT NULL,
+    "due_date" TIMESTAMP(3),
+    "created_at" TIMESTAMP(3) NOT NULL,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "tasks_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex

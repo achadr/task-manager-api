@@ -8,6 +8,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: "file:./data/tasks.sqlite",
+    url: process.env.DATABASE_URL ?? '',
   },
 });

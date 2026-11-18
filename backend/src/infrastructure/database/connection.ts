@@ -1,12 +1,9 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaLibSql } from "@prisma/adapter-libsql";
-import path from "path";
+import { PrismaPg } from "@prisma/adapter-pg";
 import logger from "../logging/Logger";
 
-const dbPath = path.resolve(__dirname, "../../../data/tasks.sqlite");
-
-const adapter = new PrismaLibSql({
-  url: `file:${dbPath}`,
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL,
 });
 
 const prisma = new PrismaClient({
@@ -30,11 +27,10 @@ prisma.$on("warn", (e) => {
 export async function connectDatabase(): Promise<void> {
   try {
     await prisma.$connect();
-    logger.info("Database connected successfully", { path: dbPath });
+    logger.info("Database connected successfully");
   } catch (error) {
     logger.error("Failed to connect to database", {
       error: error instanceof Error ? error.message : String(error),
-      path: dbPath,
     });
     throw new Error("Database connection failed");
   }
