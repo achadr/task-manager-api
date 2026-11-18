@@ -19,7 +19,7 @@ const envSchema = z.object({
     .default("development"),
 
   // Database configuration
-  DATABASE_URL: z.string().optional(),
+  DATABASE_URL: z.string().min(1),
 
   // Logging
   LOG_LEVEL: z
