@@ -180,12 +180,23 @@ The app is served on http://localhost:8080. The API is reachable under `/api`
 | Service    | Role                                                        |
 |------------|-------------------------------------------------------------|
 | `postgres` | PostgreSQL 18, port 5432 published on 127.0.0.1 only       |
+| `pubsub`   | Pub/Sub emulator (gcloud image 594.0.0-emulators), internal port 8085 |
 | `migrate`  | applies Prisma migrations, then exits                       |
 | `backend`  | Express API on port 3000, internal only, with a healthcheck |
 | `frontend` | nginx serving the React build and proxying `/api`           |
 
 Data lives in the `postgres-data` named volume and survives `docker compose down`.
 `docker compose down -v` deletes it.
+
+The backend reaches the Pub/Sub emulator through `PUBSUB_EMULATOR_HOST=pubsub:8085`.
+To check that the emulator works end to end (topic `task.created`, subscription `notif`):
+
+```bash
+docker run --rm --network task-manager-api_default -e PUBSUB_EMULATOR_HOST=pubsub:8085 -e PUBSUB_PROJECT_ID=task-manager-local -v "$PWD/scripts:/scripts:ro" -w /tmp node:24-slim sh -c "npm install --silent --no-audit --no-fund @google-cloud/pubsub && NODE_PATH=/tmp/node_modules node /scripts/pubsub-smoke-test.js"
+```
+
+The emulator does not support IAM, the Cloud console or `gcloud pubsub` commands;
+it keeps messages indefinitely. The API does not publish events yet.
 
 Known limitations: `/health` does not check the database, several environment
 variables are validated but not used.
