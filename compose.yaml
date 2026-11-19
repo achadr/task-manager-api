@@ -15,6 +15,9 @@ services:
       timeout: 3s
       retries: 5
       start_period: 10s
+  pubsub:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:594.0.0-emulators
+    command: gcloud beta emulators pubsub start --project=task-manager-local --host-port=0.0.0.0:8085
 
   migrate:
     build:
@@ -36,11 +39,15 @@ services:
       CORS_ORIGIN: http://localhost:8080
       LOG_LEVEL: info
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      PUBSUB_EMULATOR_HOST: pubsub:8085
+      PUBSUB_PROJECT_ID: task-manager-local
     depends_on:
       postgres:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+      pubsub:
+        condition: service_started
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
