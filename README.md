@@ -181,6 +181,7 @@ The app is served on http://localhost:8080. The API is reachable under `/api`
 |------------|-------------------------------------------------------------|
 | `postgres` | PostgreSQL 18, port 5432 published on 127.0.0.1 only       |
 | `pubsub`   | Pub/Sub emulator (gcloud image 594.0.0-emulators), internal port 8085 |
+| `pubsub-init` | creates topic `task.created` and subscription `notif` on the emulator, then exits |
 | `migrate`  | applies Prisma migrations, then exits                       |
 | `backend`  | Express API on port 3000, internal only, with a healthcheck |
 | `frontend` | nginx serving the React build and proxying `/api`           |
@@ -196,7 +197,21 @@ docker run --rm --network task-manager-api_default -e PUBSUB_EMULATOR_HOST=pubsu
 ```
 
 The emulator does not support IAM, the Cloud console or `gcloud pubsub` commands;
-it keeps messages indefinitely. The API does not publish events yet.
+it keeps messages indefinitely, but loses its topics and subscriptions when its container
+restarts. `pubsub-init` recreates them before the backend starts.
+
+### Events published by the API
+
+When a task is created, the API publishes `task.created` (task `id`, `title`, `createdAt`)
+right after the task is saved. The response does not wait for the publication:
+
+- Pub/Sub reachable: `201`, and the message reaches every subscription of the topic.
+- Pub/Sub unreachable: still `201`, the task is saved, the event is **lost**, and the
+  backend logs `Event publication failed` at ERROR level once the client library gives up
+  (measured: more than 60 s later). An alert on that log line is how this would be noticed.
+
+Nothing republishes a lost event. Messages can also be delivered more than once, so
+consumers must be idempotent.
 
 Known limitations: `/health` does not check the database, several environment
 variables are validated but not used.

@@ -1,12 +1,16 @@
 import { Task, TaskStatus, TaskPriority } from "../../domain/entities/Task";
 import { TaskRepository } from "../../domain/interfaces/TaskRepository";
+import { EventPublisher } from "../../domain/interfaces/EventPublisher";
 import { TaskNotFoundError } from "../../domain/errors/TaskNotFoundError";
 import { CreateTaskDTO, UpdateTaskDTO, TaskResponseDTO } from "../dtos/TaskDTO";
 import { randomUUID } from "crypto";
 import { TaskStatsDTO } from "../dtos/StatsDTO";
 
 export class TaskService {
-  constructor(private taskRepository: TaskRepository) {}
+  constructor(
+    private taskRepository: TaskRepository,
+    private eventPublisher: EventPublisher
+  ) {}
 
   async createTask(dto: CreateTaskDTO): Promise<TaskResponseDTO> {
     const now = new Date();
@@ -24,7 +28,18 @@ export class TaskService {
 
     await this.taskRepository.save(task);
 
-    return this.toResponseDTO(task);
+    // Published only once the task is stored: the event states a fact that is now true.
+    // Not awaited (measured on 2026-11-20): with Pub/Sub down, the client library retries for
+    // 60 s and the client got a 504 although the task was saved. publish() never throws and
+    // logs its own failures, so the response does not wait for it.
+    const response = this.toResponseDTO(task);
+    void this.eventPublisher.publish("task.created", {
+      id: response.id,
+      title: response.title,
+      createdAt: response.createdAt,
+    });
+
+    return response;
   }
 
   async getTaskById(id: string): Promise<TaskResponseDTO> {

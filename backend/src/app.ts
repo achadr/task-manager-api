@@ -9,6 +9,8 @@ import { createTaskRoutes } from "./presentation/routes/taskRoutes";
 import { errorHandler } from "./presentation/middlewares/errorHandler";
 import { requestId } from "./presentation/middlewares/requestId";
 import logger from "./infrastructure/logging/Logger";
+import { PubSub } from "@google-cloud/pubsub";
+import { PubSubEventPublisher } from "./infrastructure/messaging/PubSubEventPublisher";
 
 export function createApp() {
   const app = express();
@@ -76,7 +78,10 @@ export function createApp() {
 
   // Dependency Injection
   const taskRepository = new SQLiteTaskRepository();
-  const taskService = new TaskService(taskRepository);
+  const eventPublisher = new PubSubEventPublisher(
+    new PubSub({ projectId: process.env.PUBSUB_PROJECT_ID })
+  );
+  const taskService = new TaskService(taskRepository, eventPublisher);
   const taskController = new TaskController(taskService);
 
   // Routes

@@ -21,6 +21,9 @@ const envSchema = z.object({
   // Database configuration
   DATABASE_URL: z.string().min(1),
 
+  // Pub/Sub (locally: the emulator, reached through PUBSUB_EMULATOR_HOST)
+  PUBSUB_PROJECT_ID: z.string().min(1),
+
   // Logging
   LOG_LEVEL: z
     .enum(["error", "warn", "info", "debug"])
